@@ -10,7 +10,8 @@
   "terminals": [
     {
       "name": "php-server",
-      "command": "php -S 0.0.0.0:8000 -t ."
+      "command": "bash .cursor/start.sh && php -S 0.0.0.0:8000 -t .",
+      "description": "Ensures MariaDB is up (idempotent) then serves the app on port 8000."
     }
   ],
   "ports": [
