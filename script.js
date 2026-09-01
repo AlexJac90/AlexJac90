@@ -1,19 +1,28 @@
 // script.js
 document.getElementById('item-form').addEventListener('submit', addItem);
 
-function addItem(event) {
-    event.preventDefault();
+// Load any items already stored in the database when the page opens.
+document.addEventListener('DOMContentLoaded', loadItems);
 
-    const itemName = document.getElementById('item-input').value.trim();
-    const quantity = document.getElementById('quantity-input').value;
+function loadItems() {
+    fetch('get_items.php')
+        .then(response => response.json())
+        .then(items => {
+            document.getElementById('shopping-list').innerHTML = '';
+            items.forEach(item => renderItem(item.item_name, item.quantity, item.purchased));
+        })
+        .catch(error => console.error('Error loading items:', error));
+}
 
-    if (itemName === "" || quantity <= 0) {
-        return;
+function renderItem(itemName, quantity, purchased) {
+    const li = document.createElement('li');
+    if (purchased) {
+        li.classList.add('completed');
     }
 
-    // Create a new item element
-    const li = document.createElement('li');
-    li.textContent = `${itemName} (x${quantity})`;
+    const label = document.createElement('span');
+    label.textContent = `${itemName} (x${quantity})`;
+    li.appendChild(label);
 
     // Create a "mark as purchased" button
     const completeButton = document.createElement('button');
@@ -21,7 +30,7 @@ function addItem(event) {
     completeButton.classList.add('complete');
     completeButton.onclick = function () {
         li.classList.toggle('completed');
-        updateItemInDB(itemName, true);
+        updateItemInDB(itemName, li.classList.contains('completed'));
     };
     li.appendChild(completeButton);
 
@@ -37,10 +46,23 @@ function addItem(event) {
 
     // Append to the list
     document.getElementById('shopping-list').appendChild(li);
+}
+
+function addItem(event) {
+    event.preventDefault();
+
+    const itemName = document.getElementById('item-input').value.trim();
+    const quantity = document.getElementById('quantity-input').value;
+
+    if (itemName === "" || quantity <= 0) {
+        return;
+    }
+
+    renderItem(itemName, quantity, false);
 
     // Add item to the database
     addItemToDB(itemName, quantity);
-    
+
     // Clear the input fields
     document.getElementById('item-input').value = '';
     document.getElementById('quantity-input').value = '';

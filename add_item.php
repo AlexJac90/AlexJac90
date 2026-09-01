@@ -1,31 +1,31 @@
 <?php
 // add_item.php
 header('Content-Type: application/json');
+require __DIR__ . '/db.php';
 
 $data = json_decode(file_get_contents("php://input"), true);
 
-$item_name = $data['item_name'];
-$quantity = $data['quantity'];
-$purchased = $data['purchased'];
+$item_name = trim($data['item_name'] ?? '');
+$quantity = (int) ($data['quantity'] ?? 0);
+$purchased = !empty($data['purchased']) ? 1 : 0;
 
-$serverName = "localhost";
-$username = "your_username";
-$password = "your_password";
-$database = "ShoppingListApp";
-
-$conn = new mysqli($serverName, $username, $password, $database);
-
-if ($conn->connect_error) {
-    die("Connection failed: " . $conn->connect_error);
+if ($item_name === '' || $quantity <= 0) {
+    http_response_code(400);
+    echo json_encode(['message' => 'item_name and a positive quantity are required']);
+    exit;
 }
 
-$sql = "INSERT INTO ShoppingList (item_name, quantity, purchased) VALUES ('$item_name', $quantity, '$purchased')";
+$conn = get_db_connection();
 
-if ($conn->query($sql) === TRUE) {
-    echo json_encode(['message' => 'Item added successfully']);
+$stmt = $conn->prepare("INSERT INTO ShoppingList (item_name, quantity, purchased) VALUES (?, ?, ?)");
+$stmt->bind_param("sii", $item_name, $quantity, $purchased);
+
+if ($stmt->execute()) {
+    echo json_encode(['message' => 'Item added successfully', 'id' => $stmt->insert_id]);
 } else {
+    http_response_code(500);
     echo json_encode(['message' => 'Error adding item']);
 }
 
+$stmt->close();
 $conn->close();
-?>

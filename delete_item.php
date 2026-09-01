@@ -1,29 +1,29 @@
 <?php
 // delete_item.php
 header('Content-Type: application/json');
+require __DIR__ . '/db.php';
 
 $data = json_decode(file_get_contents("php://input"), true);
 
-$item_name = $data['item_name'];
+$item_name = trim($data['item_name'] ?? '');
 
-$serverName = "localhost";
-$username = "your_username";
-$password = "your_password";
-$database = "ShoppingListApp";
-
-$conn = new mysqli($serverName, $username, $password, $database);
-
-if ($conn->connect_error) {
-    die("Connection failed: " . $conn->connect_error);
+if ($item_name === '') {
+    http_response_code(400);
+    echo json_encode(['message' => 'item_name is required']);
+    exit;
 }
 
-$sql = "DELETE FROM ShoppingList WHERE item_name = '$item_name'";
+$conn = get_db_connection();
 
-if ($conn->query($sql) === TRUE) {
+$stmt = $conn->prepare("DELETE FROM ShoppingList WHERE item_name = ?");
+$stmt->bind_param("s", $item_name);
+
+if ($stmt->execute()) {
     echo json_encode(['message' => 'Item deleted successfully']);
 } else {
+    http_response_code(500);
     echo json_encode(['message' => 'Error deleting item']);
 }
 
+$stmt->close();
 $conn->close();
-?>
