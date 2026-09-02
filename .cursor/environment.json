@@ -1,0 +1,23 @@
+{
+  "name": "Shopping List (PHP + MariaDB)",
+  "user": "ubuntu",
+  "build": {
+    "dockerfile": "Dockerfile",
+    "context": ".."
+  },
+  "install": "php -v && echo 'No dependency install required (plain PHP app).'",
+  "start": "bash .cursor/start.sh",
+  "terminals": [
+    {
+      "name": "php-server",
+      "command": "bash .cursor/start.sh && php -S 0.0.0.0:8000 -t .",
+      "description": "Ensures MariaDB is up (idempotent) then serves the app on port 8000."
+    }
+  ],
+  "ports": [
+    {
+      "name": "web",
+      "port": 8000
+    }
+  ]
+}
